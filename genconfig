@@ -1,0 +1,8 @@
+#!/bin/bash
+BINARY=hello
+MAKE_TYPE=vala
+SOURCEDIR=src
+SOURCES="src/App.vala src/main.vala"
+VALAFLAGS=
+CFLAGS="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include"
+LDFLAGS="-lgobject-2.0 -lglib-2.0"
