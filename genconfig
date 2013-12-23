@@ -2,7 +2,16 @@
 BINARY=hello
 MAKE_TYPE=vala
 SOURCEDIR=src
-SOURCES="src/App.vala src/main.vala"
-VALAFLAGS=
-CFLAGS="-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include"
-LDFLAGS="-lgobject-2.0 -lglib-2.0"
+SOURCES='
+    src/GLHelper.vala
+    src/EventHandler.vala
+    src/GLDrawable.vala
+    src/SDLApplication.vala
+    src/App.vala
+    src/main.vala
+'
+
+VALAPACKAGES='sdl gl glu gee-0.8'
+VALAFLAGS='--vapidir src/vapi/'
+CFLAGS="-w -I /usr/include/SDL -I /usr/include/gee-0.8"
+LDFLAGS="-lSDL -lGL -lGLU -lgee-0.8"

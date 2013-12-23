@@ -21,12 +21,16 @@ function setup_variables_vala {
         exit 1 ;
     fi
 
+    for i in $(echo $VALAPACKAGES) ; do
+        VALAFLAGS="$VALAFLAGS --pkg $i"
+    done
+
     setup_variable "BINARY" ""
     setup_variable "CC" "gcc"
-    setup_variable "CFLAGS" "$CFLAGS" h
+    setup_variable "CFLAGS" "-I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -lgobject-2.0 -lglib-2.0 $CFLAGS" h
     setup_variable "VALAFLAGS" "$VALAFLAGS" h
     setup_variable "VALAC" "valac"
-    setup_variable "LDFLAGS" "$LDFLAGS" h
+    setup_variable "LDFLAGS" "-lgobject-2.0 -lglib-2.0 $LDFLAGS" h
 
     # the source directory
     setup_variable "SOURCEDIR" .
@@ -51,6 +55,7 @@ function generate_vala {
     
     cfiles=''
     objects=''
+    vapis=''
     for i in $SOURCES ; do
         noext=$(echo $i | sed 's/\.vala$//g')
         basename=$(basename $noext) 
@@ -59,32 +64,48 @@ function generate_vala {
         cfile='$(VALACDIR)/'$basename'.c'
         vapi='$(VALAVAPIDIR)/'$basename'.vapi'
         object='$(OBSDIR)/'$basename'.o'
+
+        echo -e "$vapi: $i">&3
+        echo -e '\t$(VALAC) --fast-vapi='$vapi' '$i>&3
+        echo -e ''>&3
     
         # depends on vala source
-        echo -e "$cfile: $i $cfiles">&3
-        echo -e '\t$(VALAC) $(VALAFLAGS) --vapidir $(VALAVAPIDIR) --vapi '$vapi' -H '$header' -C '$i>&3
+        echo -e "$cfile: $i">&3
+        echo -e '\t$(VALAC) $(VALAFLAGS) --vapidir $(VALAVAPIDIR) --vapi '$vapi' -H '$header' -C '$i' '$vapis>&3
         echo -e '\t'mv $noext'.c '$cfile>&3
         echo -e ''>&3
 
         echo -e "$object: $cfile">&3
-        echo -e '\t$(CC) $(CFLAGS) -o '$object' -c '$cfile>&3
+        echo -e '\t$(CC) -I$(VALAHEADERDIR) $(CFLAGS) -o '$object' -c '$cfile>&3
         echo -e ''>&3
 
         cfiles="$cfiles $cfile"
         objects="$objects $object"
+        vapis="$vapis $vapi"
     done
-    echo -e 'build: '$objects''>&3
+    echo -e "vapis: $vapis\n">&3
+    echo -e "cfiles: vapis | $cfiles\n">&3
+    echo -e "objects: cfiles | $objects\n">&3
+    echo -e "build: objects">&3
     echo -e '\t$(CC) $(LDFLAGS) -o $(BINARY) '$objects>&3
     echo -e ''>&3
 
     echo '
 clean:
 	rm -rf $(VALACDIR) $(OBSDIR)
+
+spotless: clean
+	rm -rf $(VALAHEADERDIR) $(VALAVAPIDIR)
+'>&3
+
+    echo '
+genmake:
+	./valagenmake.sh
 '>&3
 }
 
 if [ -f genconfig ] ; then
-    source genconfig
+    source ./genconfig
 fi
 
 rm -f Makefile
